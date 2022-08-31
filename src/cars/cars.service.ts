@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
-import { CreateCarDto } from './dto/create-car.dto';
+import { CreateCarDto, UpdateCarDto } from './dto';
 import { Car } from './interface/car.interface';
 
 @Injectable()
@@ -28,9 +28,11 @@ export class CarsService {
       model: '2008',
     },
   ];
+
   findAll() {
     return this.cars;
   }
+
   findOneById(id: string) {
     const car = this.cars.find((car) => car.id === id);
     if (!car) {
@@ -38,6 +40,7 @@ export class CarsService {
     }
     return car;
   }
+
   create(createCarDto: CreateCarDto) {
     const newCar: Car = {
       id: uuid(),
@@ -45,5 +48,30 @@ export class CarsService {
     }
     this.cars.push(newCar);
     return newCar;
+  }
+
+  update(id: string, udpateCarDto: UpdateCarDto) {
+    let carDB = this.findOneById(id);
+    // esta validación no es necesaria, es solo para probar
+    if (udpateCarDto.id && udpateCarDto.id !== id) {
+      throw new BadRequestException(`Car id in body not valid`);
+    }
+    this.cars = this.cars.map(car => {
+      if (car.id === id) {
+        carDB = {
+          ...carDB,
+          ...udpateCarDto,
+          id
+        }
+        return carDB;
+      }
+      return car
+    })
+    return carDB;
+  }
+
+  delete(id: string) {
+    const carDB = this.findOneById(id);
+    this.cars = this.cars.filter(car => car.id !== id)
   }
 }
